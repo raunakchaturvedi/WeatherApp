@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Weather App</title>
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    background: #f0f8ff;
+    margin: 0;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  h1 {
+    margin-bottom: 20px;
+  }
+  #weather-box {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    width: 350px;
+    text-align: center;
+  }
+  input {
+    padding: 8px;
+    width: calc(100% - 16px);
+    margin-bottom: 10px;
+    border-radius: 4px;
+    border: 1px solid #ccc;
+  }
+  button {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 4px;
+    background-color: #007BFF;
+    color: white;
+    cursor: pointer;
+  }
+  button:hover {
+    background-color: #0056b3;
+  }
+  #error {
+    color: red;
+    margin-top: 10px;
+  }
+  #weather-icon {
+    width: 80px;
+    height: 80px;
+    margin: 10px auto;
+  }
+</style>
+</head>
+<body>
+
+<h1>Weather Website</h1>
+<div id="weather-box">
+  <input type="text" id="location" placeholder="Enter location" />
+  <button onclick="getWeather()">Get Weather</button>
+  <div id="display"></div>
+  <div id="error"></div>
+</div>
+
+<script>
+  const apiKey = '5e359878b1a74efdba955547250806';
+
+  async function getWeather() {
+    const locationInput = document.getElementById('location').value.trim();
+    if (!locationInput) {
+      document.getElementById('error').innerText = 'Please enter a location.';
+      document.getElementById('display').innerHTML = '';
+      return;
+    }
+    document.getElementById('error').innerText = '';
+    const url = `http://api.weatherapi.com/v1/current.json?key=${apiKey}&q=${encodeURIComponent(locationInput)}&aqi=yes`;
+    try {
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error('Location not found or API error.');
+      }
+      const data = await response.json();
+      displayWeather(data);
+    } catch (error) {
+      document.getElementById('error').innerText = error.message;
+      document.getElementById('display').innerHTML = '';
+    }
+  }
+
+  function displayWeather(data) {
+    const { location, current } = data;
+    const conditionText = current.condition.text.toLowerCase();
+
+    // Map condition to icons
+    const iconMap = {
+      'clear': 'https://cdn-icons-png.flaticon.com/512/1163/1163660.png',
+      'sunny': 'https://cdn-icons-png.flaticon.com/512/169/169367.png',
+      'partly cloudy': 'https://cdn-icons-png.flaticon.com/512/1163/1163638.png',
+      'cloudy': 'https://cdn-icons-png.flaticon.com/512/414/414927.png',
+      'overcast': 'https://cdn-icons-png.flaticon.com/512/122/122340.png',
+      'mist': 'https://cdn-icons-png.flaticon.com/512/2204/2204349.png',
+      'rain': 'https://cdn-icons-png.flaticon.com/512/1163/1163661.png',
+      'drizzle': 'https://cdn-icons-png.flaticon.com/512/117/117453.png',
+      'thunderstorm': 'https://cdn-icons-png.flaticon.com/512/2620/2620550.png',
+      'snow': 'https://cdn-icons-png.flaticon.com/512/2534/2534737.png',
+      'fog': 'https://cdn-icons-png.flaticon.com/512/2204/2204344.png',
+    };
+
+    let iconUrl = '';
+    // Select icon based on keywords
+    if (conditionText.includes('sunny') || conditionText.includes('clear')) {
+      iconUrl = iconMap['sunny'];
+    } else if (conditionText.includes('partly cloudy')) {
+      iconUrl = iconMap['partly cloudy'];
+    } else if (conditionText.includes('cloud')) {
+      iconUrl = iconMap['cloudy'];
+    } else if (conditionText.includes('overcast')) {
+      iconUrl = iconMap['overcast'];
+    } else if (conditionText.includes('mist')) {
+      iconUrl = iconMap['mist'];
+    } else if (conditionText.includes('rain') || conditionText.includes('drizzle')) {
+      iconUrl = iconMap['rain'];
+    } else if (conditionText.includes('thunderstorm')) {
+      iconUrl = iconMap['thunderstorm'];
+    } else if (conditionText.includes('snow')) {
+      iconUrl = iconMap['snow'];
+    } else if (conditionText.includes('fog')) {
+      iconUrl = iconMap['fog'];
+    } else {
+      iconUrl = 'https://cdn-icons-png.flaticon.com/512/116/116782.png'; // default icon
+    }
+
+    const html = `
+      <h2>${location.name}, ${location.region}, ${location.country}</h2>
+      <img id="weather-icon" src="${iconUrl}" alt="${current.condition.text}" />
+      <p><strong>Temperature:</strong> ${current.temp_c}°C</p>
+      <p><strong>Condition:</strong> ${current.condition.text}</p>
+      <p><strong>Wind:</strong> ${current.wind_kph} kph</p>
+      <p><strong>Humidity:</strong> ${current.humidity}%</p>
+      <p><strong>Air Quality Index:</strong> ${current.air_quality['us-epa-index']}</p>
+    `;
+    document.getElementById('display').innerHTML = html;
+  }
+</script>
+
+</body>
+</html>
